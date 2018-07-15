@@ -143,6 +143,29 @@ app.get('/getjobs', function (req, res) {
     })
 })
 
+app.get('/getjobs/:id', function (req, res) {
+    jobsModel.findById(req.params.id, function (result) {
+        res.send(result);
+    })
+})
+
+app.get('/search/combine/:category/:keyword', function (req, res) {
+    console.log("Category: ", req.params.category);
+    console.log("Keyword: ", req.params.keyword);
+    search(req.params.keyword, function (result) {
+        if (result) {
+            let firstRes = result["hits"]["hits"];
+            console.log("First res: ", firstRes);
+            let secondRes = firstRes.filter(obj =>
+                obj["_source"]["category"] ? obj["_source"]["category"].toUpperCase() == req.params.category.toUpperCase() : false
+            );
+            console.log("Second res: ", secondRes);
+            res.status(200)
+                .send(secondRes);
+        }
+    })
+})
+
 app.post('/employeesubcribe', function (req, res) {
     let jobId = req.body.jobId;
     let employeeId = req.cookies.employeeId;

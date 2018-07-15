@@ -7,6 +7,11 @@ class JobsModel extends BaseModel {
         super("Jobs");
     }
 
+    findById(id, callback) {
+        console.log(id)
+        this.find({"_id": ObjectId(id)}, callback)
+    }
+
     findHistory(id, callback) {
         this.find({"assigned_id": id}, callback)
     }
