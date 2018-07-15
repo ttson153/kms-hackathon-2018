@@ -6,43 +6,55 @@ class JobsModel extends BaseModel {
     }
 
     findHistory(id, callback) {
-        this.find({"assigned_id" : id}, callback)
+        this.find({"assigned_id" : id, "status" : "Done"}, function(res) {
+            callback(res)
+        })
     }
 
     // Temporary completed
-    addSubcriber(jobId, employeeId) {
+    addSubcriber(jobId, employeeId, callback) {
         this.find({"id": jobId}, (result) => {
             let subcribers = result[0].registers;
             console.log("Result : ", result[0].registers);
             if (!subcribers.includes(employeeId)) {
                 subcribers.push(employeeId)
-                this.update({"id": jobId}, {$set: {"registers": subcribers}}, function () {
+                this.update({"id": jobId}, {$set: {"registers": subcribers}}, function (result) {
+                    if (result === false) {
+                        callback(false)
+                    } else {
+                        callback(true)
+                    }
                 })
             }
-            return subcribers;
         })
     }
 
     // Temporary completed
-    unSubcribe(jobId, employeeId) {
+    unSubcribe(jobId, employeeId, callback) {
         this.find({"id": jobId}, (result) => {
             let subcribers = result[0].registers;
             let index = subcribers.indexOf(employeeId);
             if (index > 0) {
                 subcribers.splice(index, 1);
                 this.update({"id": jobId}, {$set: {"registers": subcribers}}, function (result) {
-                    // TODO:
+                    if (result === false) {
+                        callback(false)
+                    } else {
+                        callback(true)
+                    }
                 })
             }
-            return subcribers;
         })
     }
 
     // Temporary completed
-    changeStatus(jobId, status) {
+    changeStatus(jobId, status, callback) {
         this.update({"id": jobId}, {$set: {"status": status}}, function (result) {
-            // TODO:
-            return true;
+            if (result === false) {
+                callback(false)
+            } else {
+                callback(true)
+            }
         })
     }
 
