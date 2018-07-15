@@ -1,4 +1,6 @@
 const {BaseModel} = require("./base.model");
+const {EmployeeModel} = require("./employee.model");
+const {ObjectId} = require("mongodb");
 
 class JobsModel extends BaseModel {
     constructor() {
@@ -6,61 +8,65 @@ class JobsModel extends BaseModel {
     }
 
     findHistory(id, callback) {
-        this.find({"assigned_id" : id, "status" : "Done"}, function(res) {
-            callback(res)
-        })
+        this.find({"assigned_id": id}, callback)
     }
 
     // Temporary completed
-    addSubcriber(jobId, employeeId, callback) {
-        this.find({"id": jobId}, (result) => {
+    addSubcriber(jobId, employeeId) {
+        this.find({_id: ObjectId(jobId)}, (result) => {
+            console.log("Result: ", result);
             let subcribers = result[0].registers;
             console.log("Result : ", result[0].registers);
-            if (!subcribers.includes(employeeId)) {
-                subcribers.push(employeeId)
-                this.update({"id": jobId}, {$set: {"registers": subcribers}}, function (result) {
-                    if (result === false) {
-                        callback(false)
-                    } else {
-                        callback(true)
-                    }
+            if (!subcribers.find((obj) => obj._id == employeeId)) {
+                // TODO: Get username
+                new EmployeeModel().find({_id: ObjectId(employeeId)}, (result) => {
+                    let employeeName = result[0].name;  // Check the field
+                    // TODO: Push id and employeeName in subcribers
+                    subcribers.push({
+                        _id: ObjectId(employeeId),
+                        name: employeeName
+                    });
+                    this.update({_id: ObjectId(jobId)}, {
+                        $set: {
+                            registers: subcribers
+                        }
+                    }, function (result) {
+                    })
                 })
             }
+            // Useless now
+            return subcribers;
         })
     }
 
     // Temporary completed
-    unSubcribe(jobId, employeeId, callback) {
-        this.find({"id": jobId}, (result) => {
+    unSubcribe(jobId, employeeId) {
+        this.find({_id: ObjectId(jobId)}, (result) => {
             let subcribers = result[0].registers;
-            let index = subcribers.indexOf(employeeId);
-            if (index > 0) {
-                subcribers.splice(index, 1);
-                this.update({"id": jobId}, {$set: {"registers": subcribers}}, function (result) {
-                    if (result === false) {
-                        callback(false)
-                    } else {
-                        callback(true)
-                    }
+            // let index = subcribers.indexOf(employeeId);
+            let index = subcribers.find((obj) => obj._id == employeeId);
+            if (index) {
+                subcribers.splice(subcribers.indexOf(index), 1);
+                console.log(subcribers)
+                this.update({_id: ObjectId(jobId)}, {$set: {"registers": subcribers}}, function (result) {
+                    // TODO:
                 })
             }
+            return subcribers;
         })
     }
 
     // Temporary completed
-    changeStatus(jobId, status, callback) {
-        this.update({"id": jobId}, {$set: {"status": status}}, function (result) {
-            if (result === false) {
-                callback(false)
-            } else {
-                callback(true)
-            }
+    changeStatus(jobId, status) {
+        this.update({_id: ObjectId(jobId)}, {$set: {"status": status}}, function (result) {
+            // TODO:
+            return true;
         })
     }
 
     // Temporary completed
     assignEmployee(jobId, employeeId, callback) {
-        this.find({"id": jobId}, (result) => {
+        this.find({_id: ObjectId(jobId)}, (result) => {
             let assigned_Id = result[0].assigned_id;
             console.log(assigned_Id)
             if (assigned_Id !== -1) {
@@ -68,7 +74,7 @@ class JobsModel extends BaseModel {
                 callback(false)
                 return false;
             } else {
-                this.update({"id": jobId}, {
+                this.update({_id: ObjectId(jobId)}, {
                     $set: {
                         "assigned_id": employeeId,
                         "status": "Assigned"
